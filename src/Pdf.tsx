@@ -17,8 +17,8 @@ import {
   View,
 } from 'react-native';
 
-import { PageDim, PdfUtil } from './PdfUtil';
-import { PdfView } from './PdfView';
+import {PageDim, PdfUtil} from './PdfUtil';
+import {PdfView} from './PdfView';
 
 export type PageMeasurement = {
   /**
@@ -36,6 +36,7 @@ export type PageMeasurement = {
  * Optional props, forwarded to the underlying `FlatList` component.
  */
 type BaseListProps = {
+  scrollEnabled?: boolean
   /**
    * Instead of starting at the top with the first item, start at
    * initialScrollIndex.
@@ -184,7 +185,7 @@ function useMeasurePages(
         maxPageHeight,
         (layoutWidth * pageSize.height) / pageSize.width
       );
-      measurements.push({ itemHeight, offset });
+      measurements.push({itemHeight, offset});
       // and offset for separator between pages.
       offset += itemHeight + separatorSize;
     }
@@ -196,7 +197,7 @@ function useMeasurePages(
  * Display a pdf.
  */
 export const Pdf = forwardRef((props: PdfProps, ref: React.Ref<PdfRef>) => {
-  const { onError, onLoadComplete, source } = props;
+  const {scrollEnabled = true, onError, onLoadComplete, source} = props;
 
   const [flatListLayout, setFlatListLayout] = useState<PageDim>({
     height: 0,
@@ -210,15 +211,15 @@ export const Pdf = forwardRef((props: PdfProps, ref: React.Ref<PdfRef>) => {
     ref,
     () => ({
       scrollToIndex: (index) =>
-        listRef.current?.scrollToIndex({ animated: true, index }),
+        listRef.current?.scrollToIndex({animated: true, index}),
       scrollToOffset: (offset) =>
-        listRef.current?.scrollToOffset({ animated: true, offset }),
+        listRef.current?.scrollToOffset({animated: true, offset}),
     }),
     [listRef]
   );
 
   useEffect(() => {
-    const state = { live: true };
+    const state = {live: true};
     PdfUtil.getPageSizes(source)
       .then((sizes) => {
         if (state.live) {
@@ -307,7 +308,7 @@ export const Pdf = forwardRef((props: PdfProps, ref: React.Ref<PdfRef>) => {
         if (prev.height === next.height && prev.width === next.width) {
           return prev;
         }
-        return { height: next.height, width: next.width };
+        return {height: next.height, width: next.width};
       });
     },
     [setFlatListLayout]
@@ -335,11 +336,10 @@ export const Pdf = forwardRef((props: PdfProps, ref: React.Ref<PdfRef>) => {
       data={
         flatListLayout.height !== 0 || pageDims.length === 0 ? pageDims : []
       }
+      scrollEnabled={scrollEnabled}
       getItemLayout={getItemLayout}
-      initialNumToRender={1}
       ItemSeparatorComponent={generateItemSeparator}
       keyExtractor={stringifyIndex}
-      maxToRenderPerBatch={2}
       onLayout={onLayout}
       ref={listRef}
       renderItem={renderItem}
@@ -364,16 +364,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     elevation: 4,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.23,
     shadowRadius: 2.62,
   },
-  pageAlign: { alignItems: 'center' },
-  separator: { height: separatorSize },
+  pageAlign: {alignItems: 'center'},
+  separator: {height: separatorSize},
 });
 
 function generateItemSeparator() {
-  return <View style={styles.separator} />;
+  return <View style={styles.separator}/>;
 }
 
 function stringifyIndex(_item: unknown, index: number) {
